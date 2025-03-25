@@ -9,17 +9,14 @@ open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
-open Microsoft.EntityFrameworkCore
-open Microsoft.AspNetCore.Identity
+open Giraffe.OpenApi
+open Giraffe.EndpointRouting
 
 // ---------------------------------
 // Models
 // ---------------------------------
 
-type Message =
-    {
-        Text : string
-    }
+type Message = { Text: string }
 
 // ---------------------------------
 // Views
@@ -29,49 +26,49 @@ module Views =
     open Giraffe.ViewEngine
 
     let layout (content: XmlNode list) =
-        html [] [
-            head [] [
-                title []  [ encodedText "giraffe_auth" ]
-                link [ _rel  "stylesheet"
-                       _type "text/css"
-                       _href "/main.css" ]
-            ]
-            body [] content
-        ]
+        html
+            []
+            [ head
+                  []
+                  [ title [] [ encodedText "giraffe_auth" ]
+                    link [ _rel "stylesheet"; _type "text/css"; _href "/main.css" ] ]
+              body [] content ]
 
-    let partial () =
-        h1 [] [ encodedText "giraffe_auth" ]
+    let partial () = h1 [] [ encodedText "giraffe_auth" ]
 
-    let index (model : Message) =
-        [
-            partial()
-            p [] [ encodedText model.Text ]
-        ] |> layout
+    let index (model: Message) =
+        [ partial (); p [] [ encodedText model.Text ] ] |> layout
 
 // ---------------------------------
 // Web app
 // ---------------------------------
 
-let indexHandler (name : string) =
+let indexHandler (name: string) =
     let greetings = sprintf "Hello %s, from Giraffe!" name
-    let model     = { Text = greetings }
-    let view      = Views.index model
+    let model = { Text = greetings }
+    let view = Views.index model
     htmlView view
 
-let webApp =
-    choose [
-        GET >=>
-            choose [
-                route "/" >=> indexHandler "world"
-                routef "/hello/%s" indexHandler
-            ]
-        setStatusCode 404 >=> text "Not Found" ]
+let endpoints =
+    [ GET [ route "/" (text "hello world") |> addOpenApiSimple ]
+      subRoute "/numbers" [ POST [ route "/numbers" ([| 1; 2; 3 |] |> json) |> addOpenApiSimple ] ] ]
+
+//let webApp =
+//    choose
+//        [ GET
+//          >=> choose
+//                  [ route "/" >=> indexHandler "world"
+//                    routef "/hello/%s" indexHandler
+//                    routef "/product/{%i}" (fun id -> [ 1; 2; 3 ] |> json)
+//                    |> configureEndpoint _.WithName("GetProduct")
+//                    |> addOpenApiSimple<int, int> ]
+//          setStatusCode 404 >=> text "Not Found" ]
 
 // ---------------------------------
 // Error handler
 // ---------------------------------
 
-let errorHandler (ex : Exception) (logger : ILogger) =
+let errorHandler (ex: Exception) (logger: ILogger) =
     logger.LogError(ex, "An unhandled exception has occurred while executing the request.")
     clearResponse >=> setStatusCode 500 >=> text ex.Message
 
@@ -79,63 +76,63 @@ let errorHandler (ex : Exception) (logger : ILogger) =
 // Config and Main
 // ---------------------------------
 
-let configureCors (builder : CorsPolicyBuilder) =
+let configureCors (builder: CorsPolicyBuilder) =
     builder
-        .WithOrigins(
-            "http://localhost:5000",
-            "https://localhost:5001")
-       .AllowAnyMethod()
-       .AllowAnyHeader()
-       |> ignore
+        .WithOrigins("http://localhost:5000", "https://localhost:5001")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+    |> ignore
 
-let configureApp (app : IApplicationBuilder) =
-    let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
-    (match env.IsDevelopment() with
-    | true  ->
-        app.UseDeveloperExceptionPage()
-    | false ->
-        app .UseGiraffeErrorHandler(errorHandler)
-            .UseHttpsRedirection())
+let configureApp (app: WebApplication) =
+    let isDevelopment: bool = app.Environment.IsDevelopment()
+
+    app.UseSwagger() |> ignore
+    app.UseSwaggerUI() |> ignore
+
+    (match isDevelopment with
+     | true -> app.UseDeveloperExceptionPage()
+     | false -> app.UseGiraffeErrorHandler(errorHandler).UseHttpsRedirection())
+        .UseRouting()
+        .UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
         .UseCors(configureCors)
         .UseStaticFiles()
-        .UseGiraffe(webApp)
 
-let configureServices (services : IServiceCollection) =
-    services.AddCors()    |> ignore
+let configureServices (services: IServiceCollection) =
+    services.AddCors() |> ignore
     services.AddGiraffe() |> ignore
+    services.AddEndpointsApiExplorer() |> ignore
+    services.AddSwaggerGen() |> ignore
 
-    //services.AddIdentity<IdentityUser, IdentityRole>(fun options -> 
-    //    options.Password.RequireLowercase <- true
-    //    options.Password.RequireUppercase <- true
-    //    options.Password.RequireDigit <- true
-    //    options.Lockout.MaxFailedAccessAttempts <- 5
-    //    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
-    //    options.User.RequireUniqueEmail <- true
-    //    // enable this if we use email verification 
-    //    // options.SignIn.RequireConfirmedEmail <- true;
-    //    )
-    //// tell asp.net identity to use the above store
-    //    .AddDefaultTokenProviders() // need for email verification token generation
-    //    |> ignore
+//services.AddIdentity<IdentityUser, IdentityRole>(fun options ->
+//    options.Password.RequireLowercase <- true
+//    options.Password.RequireUppercase <- true
+//    options.Password.RequireDigit <- true
+//    options.Lockout.MaxFailedAccessAttempts <- 5
+//    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
+//    options.User.RequireUniqueEmail <- true
+//    // enable this if we use email verification
+//    // options.SignIn.RequireConfirmedEmail <- true;
+//    )
+//// tell asp.net identity to use the above store
+//    .AddDefaultTokenProviders() // need for email verification token generation
+//    |> ignore
 
-let configureLogging (builder : ILoggingBuilder) =
-    builder.AddConsole()
-           .AddDebug() |> ignore
+let configureLogging (builder: ILoggingBuilder) =
+    builder.AddConsole().AddDebug() |> ignore
 
 [<EntryPoint>]
 let main args =
     let contentRoot = Directory.GetCurrentDirectory()
-    let webRoot     = Path.Combine(contentRoot, "WebRoot")
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(
-            fun webHostBuilder ->
-                webHostBuilder
-                    .UseContentRoot(contentRoot)
-                    .UseWebRoot(webRoot)
-                    .Configure(Action<IApplicationBuilder> configureApp)
-                    .ConfigureServices(configureServices)
-                    .ConfigureLogging(configureLogging)
-                    |> ignore)
-        .Build()
-        .Run()
+
+    let builder = WebApplication.CreateBuilder(args)
+    builder.Services |> configureServices
+    builder.Logging |> configureLogging
+
+    builder.Host.UseContentRoot(contentRoot) |> ignore
+
+    let app = builder.Build()
+
+    app |> configureApp |> ignore
+
+    app.Run()
     0
