@@ -7,19 +7,20 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Equinox" Version="4.0.3" />
-    <PackageReference Include="Equinox.MessageDb" Version="4.0.0" />
-    <PackageReference Include="FsCodec.SystemTextJson" Version="3.0.3" />
+    <PackageReference Include="Equinox" Version="4.1.0-rc.1" />
+    <PackageReference Include="Equinox.MessageDb" Version="4.1.0-rc.1" />
+    <PackageReference Include="FsCodec.SystemTextJson" Version="3.1.0-rc.5" />
     <PackageReference Include="Giraffe" Version="7.0.2" />
     <PackageReference Include="Giraffe.OpenApi" Version="0.0.1" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.4.*" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.3" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infra.fs" />
-    <Compile Include="Numbers.fs" />
+    <Compile Include="Todo.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -27,6 +28,9 @@
     <Content Include="WebRoot\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="FSharp.Identity\FSharp.Identity.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="9.0.201" />

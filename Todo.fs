@@ -4,8 +4,8 @@ open FsCodec.Core
 open System
 open FSharp.UMX
 
-let [<Literal>] CategoryName = "Numbers"
-let private streamId = FsCodec.StreamId.gen ClientId.toString
+let [<Literal>] CategoryName = "Todo"
+let private streamId = FsCodec.StreamId.gen UserId.toString
 
 module Events =
     type Added =         { value: int }
@@ -47,7 +47,7 @@ module Decisions =
         if state.items |> List.isEmpty |> not then
             Events.Cleared |]
 
-type Service internal (resolve: ClientId -> Equinox.Decider<Events.Event, Fold.State>) =
+type Service internal (resolve: UserId -> Equinox.Decider<Events.Event, Fold.State>) =
 
     member _.List(clientId): Async<int seq> =
         let decider = resolve clientId

@@ -11,6 +11,11 @@ open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open Giraffe.OpenApi
 open Giraffe.EndpointRouting
+open Microsoft.AspNetCore.Identity
+open FSharp.Identity.Extensions
+
+type FSIdentityUser = FSharp.Identity.FsharpIdentity.IdentityUser
+type FSIdentityRole = FSharp.Identity.FsharpIdentity.IdentityRole
 
 // ---------------------------------
 // Models
@@ -76,6 +81,7 @@ let errorHandler (ex: Exception) (logger: ILogger) =
 // Config and Main
 // ---------------------------------
 
+
 let configureCors (builder: CorsPolicyBuilder) =
     builder
         .WithOrigins("http://localhost:5000", "https://localhost:5001")
@@ -93,26 +99,38 @@ let configureApp (app: WebApplication) =
      | true -> app.UseDeveloperExceptionPage()
      | false -> app.UseGiraffeErrorHandler(errorHandler).UseHttpsRedirection())
         .UseRouting()
-        .UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
+        .UseEndpoints(fun e -> 
+            e.MapGiraffeEndpoints(endpoints)
+            e.MapGroup("/Account") 
+                |> Microsoft.AspNetCore.Routing.IdentityApiEndpointRouteBuilderExtensions.MapIdentityApi<IdentityUser> 
+                |> ignore
+        )
         .UseCors(configureCors)
         .UseStaticFiles()
 
 let configureServices (services: IServiceCollection) =
+    services.AddAuthentication()
+        .AddCookie() |> ignore
+    services.AddAuthorization() |> ignore
     services.AddCors() |> ignore
     services.AddGiraffe() |> ignore
     services.AddEndpointsApiExplorer() |> ignore
     services.AddSwaggerGen() |> ignore
+    services.AddTransient<TimeProvider>(fun _ -> TimeProvider.System) |> ignore
+    services.AddIdentityCore<FSIdentityUser>().AddApiEndpoints() |> ignore
+    services.AddFSharpIdentity() |> ignore
 
-//services.AddIdentity<IdentityUser, IdentityRole>(fun options ->
-//    options.Password.RequireLowercase <- true
-//    options.Password.RequireUppercase <- true
-//    options.Password.RequireDigit <- true
-//    options.Lockout.MaxFailedAccessAttempts <- 5
-//    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
-//    options.User.RequireUniqueEmail <- true
-//    // enable this if we use email verification
-//    // options.SignIn.RequireConfirmedEmail <- true;
-//    )
+    //services.AddIdentity<FSIdentityUser, FSIdentityRole>(fun options ->
+    //    options.Password.RequireLowercase <- true
+    //    options.Password.RequireUppercase <- true
+    //    options.Password.RequireDigit <- true
+    //    options.Lockout.MaxFailedAccessAttempts <- 5
+    //    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
+    //    options.User.RequireUniqueEmail <- true
+    //    // enable this if we use email verification
+    //    // options.SignIn.RequireConfirmedEmail <- true;
+    //    )
+    //    |> ignore
 //// tell asp.net identity to use the above store
 //    .AddDefaultTokenProviders() // need for email verification token generation
 //    |> ignore
