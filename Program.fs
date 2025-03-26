@@ -14,9 +14,6 @@ open Giraffe.EndpointRouting
 open Microsoft.AspNetCore.Identity
 open FSharp.Identity.Extensions
 
-type FSIdentityUser = FSharp.Identity.FsharpIdentity.IdentityUser
-type FSIdentityRole = FSharp.Identity.FsharpIdentity.IdentityRole
-
 // ---------------------------------
 // Models
 // ---------------------------------
@@ -107,7 +104,7 @@ let configureApp (app: WebApplication) =
         )
         .UseCors(configureCors)
         .UseStaticFiles()
-
+        
 let configureServices (services: IServiceCollection) =
     services.AddAuthentication()
         .AddCookie() |> ignore
@@ -117,7 +114,7 @@ let configureServices (services: IServiceCollection) =
     services.AddEndpointsApiExplorer() |> ignore
     services.AddSwaggerGen() |> ignore
     services.AddTransient<TimeProvider>(fun _ -> TimeProvider.System) |> ignore
-    services.AddIdentityCore<FSIdentityUser>().AddApiEndpoints() |> ignore
+    services.AddIdentityApiEndpoints<IdentityUser>()|> ignore
     services.AddFSharpIdentity() |> ignore
 
     //services.AddIdentity<FSIdentityUser, FSIdentityRole>(fun options ->
