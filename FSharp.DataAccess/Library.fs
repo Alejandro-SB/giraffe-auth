@@ -1,29 +1,39 @@
-﻿namespace FSharp.DataAccess
+﻿namespace FSharp.Identity.DataAccess
 
 open System
 open Dapper.FSharp
 open System.Data
 open Npgsql
 open Dapper.FSharp.PostgreSQL
+open Microsoft.AspNetCore.Identity
 
 module DbAccess =
     Dapper.FSharp.PostgreSQL.OptionTypes.register()
 
-    type DbUser = {Id: string; Name:string}
+    let [<Literal>] private connString = "postgres://postgres:postgres@localhost:5432/giraffe";
+    let private Users = table'<IdentityUser> "Users"
+    let private getConnection () = new NpgsqlConnection(connString) :> IDbConnection
 
-    let [<Literal>] connString = "postgres://postgres:postgres@localhost:5432/giraffe";
-    let userTable = table'<DbUser> "Users"
-    let getConnection () = new NpgsqlConnection(connString) :> IDbConnection
+    type UserContext =
+        member this.createUser (user: IdentityUser)= 
+            let conn = getConnection()
 
-    let createUser (n: int)= 
-        let user = {Id = n.ToString(); Name = "User " + n.ToString()}
-        let conn = getConnection()
+            task {
+                insert {
+                    into Users
+                    value user
+                    } |> conn.InsertAsync |> ignore
+            }
 
-        task {
-            insert {
-                into userTable
-                value user
-                } |> conn.InsertOutputAsync |> ignore
-        } 
+        member this.findByName (name: string) =
+            let conn = getConnection()
+
+            task {
+                select {
+                    for u in Users do
+                    where (u.NormalizedUserName = name)
+                } |> conn.SelectAsync<IdentityUser>
+            }
+            
         
         

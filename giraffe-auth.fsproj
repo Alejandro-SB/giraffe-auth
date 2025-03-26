@@ -30,7 +30,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="FSharp.Identity\FSharp.Identity.fsproj" />
+    <ProjectReference Include="FSharp.Identity\FSharp.Identity.Stores.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="9.0.201" />

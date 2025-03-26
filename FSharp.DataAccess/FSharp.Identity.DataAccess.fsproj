@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper.FSharp" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.3" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
   </ItemGroup>
 

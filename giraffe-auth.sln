@@ -5,14 +5,14 @@ VisualStudioVersion = 17.13.35828.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "giraffe-auth", "giraffe-auth.fsproj", "{77293AF4-920D-CB47-78F5-C2D99FBF1935}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Identity", "FSharp.Identity\FSharp.Identity.fsproj", "{560A0A25-F3D9-4E89-878D-55CA6BA9A5AF}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Identity.Stores", "FSharp.Identity\FSharp.Identity.Stores.fsproj", "{560A0A25-F3D9-4E89-878D-55CA6BA9A5AF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.DataAccess", "FSharp.DataAccess\FSharp.DataAccess.fsproj", "{65E33919-6D74-4C42-B833-EEC37B1C5087}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Identity.DataAccess", "FSharp.DataAccess\FSharp.Identity.DataAccess.fsproj", "{65E33919-6D74-4C42-B833-EEC37B1C5087}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

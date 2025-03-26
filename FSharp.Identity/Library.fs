@@ -1,11 +1,12 @@
-﻿namespace FSharp.Identity
+﻿namespace FSharp.Identity.Stores
 
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
+open FSharp.Identity.DataAccess.DbAccess
 
 module FsharpIdentity =
-    type UserStore () =
+    type UserStore (dbAccess: UserContext) =
         interface IUserStore<IdentityUser> with
             member this.CreateAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
@@ -28,7 +29,7 @@ module FsharpIdentity =
             member this.FindByNameAsync
                 (normalizedUserName: string, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<IdentityUser> =
-                raise (System.NotImplementedException())
+                dbAccess.createUser()
 
             member this.GetNormalizedUserNameAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
@@ -43,7 +44,7 @@ module FsharpIdentity =
             member this.GetUserNameAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<string> =
-                raise (System.NotImplementedException())
+                Task.FromResult(user.UserName)
 
             member this.SetNormalizedUserNameAsync
                 (user: IdentityUser, normalizedName: string, cancellationToken: System.Threading.CancellationToken)
@@ -102,7 +103,8 @@ module FsharpIdentity =
             member this.HasPasswordAsync (user: IdentityUser, cancellationToken: System.Threading.CancellationToken): Task<bool> = 
                 raise (System.NotImplementedException())
             member this.SetPasswordHashAsync (user: IdentityUser, passwordHash: string, cancellationToken: System.Threading.CancellationToken): Task = 
-                raise (System.NotImplementedException())
+                user.PasswordHash <- passwordHash
+                Task.CompletedTask
 
 
     type RoleStore () =
