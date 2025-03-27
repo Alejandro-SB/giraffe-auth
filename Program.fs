@@ -12,7 +12,7 @@ open Giraffe
 open Giraffe.OpenApi
 open Giraffe.EndpointRouting
 open Microsoft.AspNetCore.Identity
-open FSharp.Identity.Extensions
+open FSharp.Identity.Stores.Extensions
 
 // ---------------------------------
 // Models

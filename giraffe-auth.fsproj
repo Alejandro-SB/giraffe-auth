@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infra.fs" />
-    <Compile Include="Todo.fs" />
+    <Compile Include="Users.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
