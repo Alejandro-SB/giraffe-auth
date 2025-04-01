@@ -53,7 +53,8 @@ module FsharpIdentity =
             member this.SetNormalizedUserNameAsync
                 (user: IdentityUser, normalizedName: string, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task =
-                raise (System.NotImplementedException())
+                user.NormalizedUserName <- normalizedName
+                Task.CompletedTask
 
             member this.SetUserNameAsync
                 (user: IdentityUser, userName: string, cancellationToken: System.Threading.CancellationToken)
