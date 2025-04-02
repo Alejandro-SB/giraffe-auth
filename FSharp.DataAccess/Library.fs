@@ -71,16 +71,6 @@ module DbAccess =
         |> Sql.formatConnectionString
 
     type UserContext =
-        //member this.createUser (user: IdentityUser)=
-        //    let conn = getConnection()
-
-        //    task {
-        //        insert {
-        //            into Users
-        //            value user
-        //            } |> conn.InsertAsync |> ignore
-        //    }
-
         static member findByName(name: string) : Task<IdentityUser option> =
             task {
                 let! result = 

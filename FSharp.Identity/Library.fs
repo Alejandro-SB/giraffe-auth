@@ -20,7 +20,7 @@ module FsharpIdentity =
                 raise (System.NotImplementedException())
 
             member this.Dispose() : unit =
-                raise (System.NotImplementedException())
+                ignore()
 
             member this.FindByIdAsync
                 (userId: string, cancellationToken: System.Threading.CancellationToken)
