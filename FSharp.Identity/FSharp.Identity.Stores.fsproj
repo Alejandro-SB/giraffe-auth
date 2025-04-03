@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="migrations/*.*" />
     <Compile Include="Infra.fs" />
     <Compile Include="Users.fs" />
     <Compile Include="Library.fs" />

@@ -4,15 +4,20 @@ open System.Threading.Tasks
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
 open FSharp.Identity.DataAccess
+open Users
 
 
 module FsharpIdentity =
-    type UserStore() =
+    type UserStore(service: Service) =
         interface IUserStore<IdentityUser> with
             member this.CreateAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<IdentityResult> =
-                raise (System.NotImplementedException())
+                task {
+                    do! service.Create(UserId.gen(), user)
+
+                    return IdentityResult.Success
+                }
 
             member this.DeleteAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
@@ -137,17 +142,17 @@ module FsharpIdentity =
             member this.GetEmailAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<string> =
-                raise (System.NotImplementedException())
+                user.Email |> Task.FromResult
 
             member this.GetEmailConfirmedAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<bool> =
-                raise (System.NotImplementedException())
+                user.EmailConfirmed |> Task.FromResult
 
             member this.GetNormalizedEmailAsync
                 (user: IdentityUser, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task<string> =
-                raise (System.NotImplementedException())
+                user.NormalizedEmail |> Task.FromResult
 
             member this.SetEmailAsync
                 (user: IdentityUser, email: string, cancellationToken: System.Threading.CancellationToken)
@@ -158,12 +163,14 @@ module FsharpIdentity =
             member this.SetEmailConfirmedAsync
                 (user: IdentityUser, confirmed: bool, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task =
-                raise (System.NotImplementedException())
+                user.EmailConfirmed <- true
+                Task.CompletedTask
 
             member this.SetNormalizedEmailAsync
                 (user: IdentityUser, normalizedEmail: string, cancellationToken: System.Threading.CancellationToken)
                 : System.Threading.Tasks.Task =
-                raise (System.NotImplementedException())
+                user.NormalizedEmail <- normalizedEmail
+                Task.CompletedTask
 
         interface IUserPasswordStore<IdentityUser> with
             member this.GetPasswordHashAsync

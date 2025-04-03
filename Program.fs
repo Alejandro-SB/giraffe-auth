@@ -13,6 +13,7 @@ open Giraffe.OpenApi
 open Giraffe.EndpointRouting
 open Microsoft.AspNetCore.Identity
 open FSharp.Identity.Stores.Extensions
+open Serilog
 
 // ---------------------------------
 // Models
@@ -106,6 +107,7 @@ let configureApp (app: WebApplication) =
         .UseStaticFiles()
         
 let configureServices (services: IServiceCollection) =
+    let log = LoggerConfiguration().CreateLogger()
     services.AddAuthentication()
         .AddCookie() |> ignore
     services.AddAuthorization() |> ignore
@@ -116,6 +118,7 @@ let configureServices (services: IServiceCollection) =
     services.AddTransient<TimeProvider>(fun _ -> TimeProvider.System) |> ignore
     services.AddIdentityApiEndpoints<IdentityUser>()|> ignore
     services.AddFSharpIdentity() |> ignore
+    services.AddScoped<Users.Service>(fun p -> UserId.gen >> Equinox.Decider.forStream log) |> ignore
 
     //services.AddIdentity<FSIdentityUser, FSIdentityRole>(fun options ->
     //    options.Password.RequireLowercase <- true

@@ -3,6 +3,8 @@
 open FsCodec.Core
 open System
 open FSharp.UMX
+open Microsoft.AspNetCore.Identity
+open System.Threading.Tasks
 
 [<Literal>]
 let CategoryName = "Users"
@@ -41,13 +43,11 @@ module Fold =
 
     let fold = Array.fold evolve
 
-type CreateUserPayload = { email: string; passwordHash: string }
-
 module Decisions =
-    let create (value: CreateUserPayload) (state: Fold.State) =
+    let create (value: IdentityUser) (state: Fold.State) =
         [| Events.Created
-               { email = value.email
-                 passwordHash = value.passwordHash } |]
+               { email = value.Email
+                 passwordHash = value.PasswordHash } |]
 
     let changePassword newPasswordHash (state: Fold.State) =
         [| Events.PasswordChanged { newPasswordHash = newPasswordHash } |]
@@ -55,9 +55,9 @@ module Decisions =
 
 type Service internal (resolve: UserId -> Equinox.Decider<Events.Event, Fold.State>) =
 
-    member _.Create(clientId, payload: CreateUserPayload) : Async<unit> =
+    member _.Create(clientId, payload: IdentityUser) : Task<unit> =
         let decider = resolve clientId
-        decider.Transact(Decisions.create payload)
+        decider.Transact(Decisions.create payload) |> Async.StartAsTask
     
     member _.ChangePassword(clientId, newPasswordHash: string) : Async<unit> =
         let decider = resolve clientId
