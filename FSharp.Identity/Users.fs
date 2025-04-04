@@ -31,17 +31,17 @@ module Fold =
 
     let initial: State option = None
 
-    let private evolve (s: State) =
-        function
+    let evolve state event =
+        match event with
         | Events.Created item ->
             { userName = item.email
               email = item.email
               passwordHash = item.passwordHash }
         | Events.PasswordChanged p ->
-            { s with
+            { state with
                 passwordHash = p.newPasswordHash }
 
-    let fold = Array.fold evolve
+    let fold : State -> Events.Event seq -> State = Seq.fold evolve
 
 module Decisions =
     let create (value: IdentityUser) (state: Fold.State) =

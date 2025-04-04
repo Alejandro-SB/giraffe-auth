@@ -3,7 +3,7 @@
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
-open FSharp.Identity.DataAccess
+
 open Users
 
 

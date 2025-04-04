@@ -13,59 +13,11 @@ open Giraffe.OpenApi
 open Giraffe.EndpointRouting
 open Microsoft.AspNetCore.Identity
 open FSharp.Identity.Stores.Extensions
-open Serilog
-
-// ---------------------------------
-// Models
-// ---------------------------------
-
-type Message = { Text: string }
-
-// ---------------------------------
-// Views
-// ---------------------------------
-
-module Views =
-    open Giraffe.ViewEngine
-
-    let layout (content: XmlNode list) =
-        html
-            []
-            [ head
-                  []
-                  [ title [] [ encodedText "giraffe_auth" ]
-                    link [ _rel "stylesheet"; _type "text/css"; _href "/main.css" ] ]
-              body [] content ]
-
-    let partial () = h1 [] [ encodedText "giraffe_auth" ]
-
-    let index (model: Message) =
-        [ partial (); p [] [ encodedText model.Text ] ] |> layout
-
-// ---------------------------------
-// Web app
-// ---------------------------------
-
-let indexHandler (name: string) =
-    let greetings = sprintf "Hello %s, from Giraffe!" name
-    let model = { Text = greetings }
-    let view = Views.index model
-    htmlView view
+open Equinox.MessageDb
 
 let endpoints =
     [ GET [ route "/" (text "hello world") |> addOpenApiSimple ]
       subRoute "/numbers" [ POST [ route "/numbers" ([| 1; 2; 3 |] |> json) |> addOpenApiSimple ] ] ]
-
-//let webApp =
-//    choose
-//        [ GET
-//          >=> choose
-//                  [ route "/" >=> indexHandler "world"
-//                    routef "/hello/%s" indexHandler
-//                    routef "/product/{%i}" (fun id -> [ 1; 2; 3 ] |> json)
-//                    |> configureEndpoint _.WithName("GetProduct")
-//                    |> addOpenApiSimple<int, int> ]
-//          setStatusCode 404 >=> text "Not Found" ]
 
 // ---------------------------------
 // Error handler
@@ -78,7 +30,6 @@ let errorHandler (ex: Exception) (logger: ILogger) =
 // ---------------------------------
 // Config and Main
 // ---------------------------------
-
 
 let configureCors (builder: CorsPolicyBuilder) =
     builder
@@ -97,40 +48,52 @@ let configureApp (app: WebApplication) =
      | true -> app.UseDeveloperExceptionPage()
      | false -> app.UseGiraffeErrorHandler(errorHandler).UseHttpsRedirection())
         .UseRouting()
-        .UseEndpoints(fun e -> 
+        .UseEndpoints(fun e ->
             e.MapGiraffeEndpoints(endpoints)
-            e.MapGroup("/Account") 
-                |> Microsoft.AspNetCore.Routing.IdentityApiEndpointRouteBuilderExtensions.MapIdentityApi<IdentityUser> 
-                |> ignore
-        )
+
+            e.MapGroup("/Account")
+            |> Microsoft.AspNetCore.Routing.IdentityApiEndpointRouteBuilderExtensions.MapIdentityApi<IdentityUser>
+            |> ignore)
         .UseCors(configureCors)
         .UseStaticFiles()
-        
+
 let configureServices (services: IServiceCollection) =
-    let log = LoggerConfiguration().CreateLogger()
-    services.AddAuthentication()
-        .AddCookie() |> ignore
+    services.AddAuthentication().AddCookie() |> ignore
     services.AddAuthorization() |> ignore
     services.AddCors() |> ignore
     services.AddGiraffe() |> ignore
     services.AddEndpointsApiExplorer() |> ignore
     services.AddSwaggerGen() |> ignore
     services.AddTransient<TimeProvider>(fun _ -> TimeProvider.System) |> ignore
-    services.AddIdentityApiEndpoints<IdentityUser>()|> ignore
+    services.AddIdentityApiEndpoints<IdentityUser>() |> ignore
     services.AddFSharpIdentity() |> ignore
-    services.AddScoped<Users.Service>(fun p -> UserId.gen >> Equinox.Decider.forStream log) |> ignore
+    services.AddLogging() |> ignore
 
-    //services.AddIdentity<FSIdentityUser, FSIdentityRole>(fun options ->
-    //    options.Password.RequireLowercase <- true
-    //    options.Password.RequireUppercase <- true
-    //    options.Password.RequireDigit <- true
-    //    options.Lockout.MaxFailedAccessAttempts <- 5
-    //    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
-    //    options.User.RequireUniqueEmail <- true
-    //    // enable this if we use email verification
-    //    // options.SignIn.RequireConfirmedEmail <- true;
-    //    )
-    //    |> ignore
+    let defaultCacheDuration = System.TimeSpan.FromMinutes (int64 20)
+    let cacheStrategy cache = Equinox.CachingStrategy.SlidingWindow (cache, defaultCacheDuration)
+
+    let create name codec initial fold accessStrategy (context, cache) =
+        MessageDbCategory(context, name, codec, fold, initial, accessStrategy, cacheStrategy cache)
+
+    let createUnoptimized name codec initial fold (context, cache) =
+        let accessStrategy = AccessStrategy.Unoptimized
+        create name codec initial fold accessStrategy (context, cache)
+
+    let connection = Equinox.MessageDb.(FSharp.Identity.Stores.DbAccess.connString)
+
+    ignore()
+
+//services.AddIdentity<FSIdentityUser, FSIdentityRole>(fun options ->
+//    options.Password.RequireLowercase <- true
+//    options.Password.RequireUppercase <- true
+//    options.Password.RequireDigit <- true
+//    options.Lockout.MaxFailedAccessAttempts <- 5
+//    options.Lockout.DefaultLockoutTimeSpan <- TimeSpan.FromMinutes(15L)
+//    options.User.RequireUniqueEmail <- true
+//    // enable this if we use email verification
+//    // options.SignIn.RequireConfirmedEmail <- true;
+//    )
+//    |> ignore
 //// tell asp.net identity to use the above store
 //    .AddDefaultTokenProviders() // need for email verification token generation
 //    |> ignore

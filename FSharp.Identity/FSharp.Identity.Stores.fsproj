@@ -9,6 +9,7 @@
     <None Include="migrations/*.*" />
     <Compile Include="Infra.fs" />
     <Compile Include="Users.fs" />
+    <Compile Include="DbAccess.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
@@ -18,10 +19,7 @@
     <PackageReference Include="FsCodec.SystemTextJson" Version="3.1.0-rc.5" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\FSharp.DataAccess\FSharp.Identity.DataAccess.fsproj" />
+    <PackageReference Include="Npgsql.FSharp" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
